@@ -4,6 +4,7 @@ using RevitMCPSDK.API.Utils;
 using revit_mcp_plugin.Configuration;
 using revit_mcp_plugin.Utils;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
@@ -20,6 +21,14 @@ namespace revit_mcp_plugin.Core
         private readonly ConfigurationManager _configManager;
         private readonly UIApplication _uiApplication;
         private readonly RevitVersionAdapter _versionAdapter;
+        private readonly List<string> _loadedCommands = new List<string>();
+        private readonly Dictionary<string, string> _failedCommands = new Dictionary<string, string>();
+
+        /// <summary>Names of commands that registered successfully on the last LoadCommands() call.</summary>
+        public IReadOnlyList<string> LoadedCommands => _loadedCommands;
+
+        /// <summary>Map of failed command name -> short error description from the last LoadCommands() call.</summary>
+        public IReadOnlyDictionary<string, string> FailedCommands => _failedCommands;
 
         /// <summary>
         /// Manager in charge of loading and managing commands.
@@ -47,6 +56,8 @@ namespace revit_mcp_plugin.Core
         /// </summary>
         public void LoadCommands()
         {
+            _loadedCommands.Clear();
+            _failedCommands.Clear();
             _logger.Info("开始加载命令\nStart loading command.");
             string currentVersion = _versionAdapter.GetRevitVersion();
             _logger.Info("当前 Revit 版本: {0}\nCurrent Revit version: {0}", currentVersion);
@@ -86,11 +97,20 @@ namespace revit_mcp_plugin.Core
                 }
                 catch (Exception ex)
                 {
-                    _logger.Error("加载命令 {0} 失败: {1}\nFailed to load command {0}: {1}", commandConfig.CommandName, ex.Message);
+                    _failedCommands[commandConfig.CommandName] = ex.GetType().Name + ": " + ex.Message;
+                    _logger.Error(
+                        "加载命令 {0} 失败: {1}: {2}\nFailed to load command {0}: {1}: {2}",
+                        commandConfig.CommandName, ex.GetType().FullName, ex.Message);
+                    for (var inner = ex.InnerException; inner != null; inner = inner.InnerException)
+                    {
+                        _logger.Error("  -> Inner: {0}: {1}", inner.GetType().FullName, inner.Message);
+                    }
                 }
             }
 
-            _logger.Info("命令加载完成\nCommand loading complete.");
+            _logger.Info(
+                "命令加载完成: {0} 成功, {1} 失败\nCommand loading complete: {0} loaded, {1} failed.",
+                _loadedCommands.Count, _failedCommands.Count);
         }
 
         /// <summary>
@@ -168,21 +188,51 @@ namespace revit_mcp_plugin.Core
                             if (command.CommandName == config.CommandName)
                             {
                                 _commandRegistry.RegisterCommand(command);
-                                _logger.Info("创建命令实例失败 [{0}]: {1}\nFailed to create command instance [{0}]: {1}",
+                                _loadedCommands.Add(command.CommandName);
+                                _logger.Info("已注册命令 [{0}] 来自 {1}\nRegistered command [{0}] from {1}",
                                     command.CommandName, Path.GetFileName(assemblyPath));
                                 break; // 找到匹配的命令后退出循环 - Exit the loop after finding a matching command.
                             }
                         }
                         catch (Exception ex)
                         {
-                            _logger.Error("创建命令实例失败 [{0}]: {1}\nFailed to create command instance [{0}]: {1}", type.FullName, ex.Message);
+                            _failedCommands[config.CommandName] = ex.GetType().Name + ": " + ex.Message;
+                            _logger.Error(
+                                "创建命令实例失败 [{0}] (来自 {1}): {2}: {3}\n" +
+                                "Failed to create command instance [{0}] (from {1}): {2}: {3}",
+                                type.FullName,
+                                Path.GetFileName(assemblyPath),
+                                ex.GetType().FullName,
+                                ex.Message);
+                            for (var inner = ex.InnerException; inner != null; inner = inner.InnerException)
+                            {
+                                _logger.Error("  -> Inner: {0}: {1}", inner.GetType().FullName, inner.Message);
+                            }
+                            if (!string.IsNullOrEmpty(ex.StackTrace))
+                            {
+                                _logger.Error("  -> StackTrace: {0}", ex.StackTrace);
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.Error("加载命令程序集失败: {0}\nFailed to load command assembly: {0}", ex.Message);
+                _failedCommands[config.CommandName] = ex.GetType().Name + ": " + ex.Message;
+                _logger.Error(
+                    "加载命令程序集失败 ({0}): {1}: {2}\nFailed to load command assembly ({0}): {1}: {2}",
+                    config.AssemblyPath, ex.GetType().FullName, ex.Message);
+                for (var inner = ex.InnerException; inner != null; inner = inner.InnerException)
+                {
+                    _logger.Error("  -> Inner: {0}: {1}", inner.GetType().FullName, inner.Message);
+                }
+                if (ex is ReflectionTypeLoadException rtle && rtle.LoaderExceptions != null)
+                {
+                    foreach (var le in rtle.LoaderExceptions)
+                    {
+                        _logger.Error("  -> LoaderException: {0}: {1}", le?.GetType().FullName, le?.Message);
+                    }
+                }
             }
         }
     }
