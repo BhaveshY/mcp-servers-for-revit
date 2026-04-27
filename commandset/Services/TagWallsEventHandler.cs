@@ -1,4 +1,5 @@
 using Autodesk.Revit.UI;
+using RevitMCPCommandSet.Utils;
 using RevitMCPSDK.API.Interfaces;
 
 namespace RevitMCPCommandSet.Services
@@ -39,6 +40,16 @@ namespace RevitMCPCommandSet.Services
 
             try
             {
+                if (!ActiveViewGuard.RequireGraphicalView(uiDoc, out string viewError))
+                {
+                    TaggingResults = new
+                    {
+                        success = false,
+                        message = viewError
+                    };
+                    return;
+                }
+
                 View activeView = doc.ActiveView;
 
                 // Get all walls in the current view
