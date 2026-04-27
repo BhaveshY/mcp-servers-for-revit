@@ -102,7 +102,7 @@ namespace RevitMCPCommandSet.Services
                         }
                         if (requestedTypeId != -1 && requestedTypeId != 0)
                         {
-                            _warnings.Add($"Requested typeId {requestedTypeId} not found. Defaulted to '{symbol.FamilyName}: {symbol.Name}' (ID: {symbol.Id.GetValue()})");
+                            _warnings.Add($"Requested typeId {requestedTypeId} not found. Defaulted to '{symbol.FamilyName}: {symbol.Name}' (ID: {symbol.Id.GetIdValue()})");
                         }
                     }
                     if (symbol == null)

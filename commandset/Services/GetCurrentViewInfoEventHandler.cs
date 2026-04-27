@@ -31,7 +31,7 @@ namespace RevitMCPCommandSet.Services
                 ResultInfo = new CurrentViewInfo
                 {
 #if REVIT2024_OR_GREATER
-                    Id = (int)activeView.Id.Value,
+                    Id = (int)activeView.Id.GetIdValue(),
 #else
                     Id = activeView.Id.IntegerValue,
 #endif

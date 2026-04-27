@@ -197,7 +197,7 @@ namespace RevitMCPCommandSet.Services
                             parameterValue = paramValue,
                             count = elementIds.Count,
                             color = new { r = rgb[0], g = rgb[1], b = rgb[2] },
-                            elementIds = elementIds.Select(id => id.GetValue().ToString()).ToList()
+                            elementIds = elementIds.Select(id => id.GetIdValue().ToString()).ToList()
                         });
                     }
 
@@ -264,7 +264,7 @@ namespace RevitMCPCommandSet.Services
                         return "None";
 
                     Element element = doc.GetElement(id);
-                    return element?.Name ?? id.GetValue().ToString();
+                    return element?.Name ?? id.GetIdValue().ToString();
                 case StorageType.Integer:
 #if REVIT2023_OR_GREATER
                     // For Revit 2023+ we should use ForgeTypeId approach

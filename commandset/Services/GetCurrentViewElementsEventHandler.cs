@@ -137,7 +137,7 @@ namespace RevitMCPCommandSet.Services
                 var elementInfos = elements.Select(e => new ElementInfo
                 {
 #if REVIT2024_OR_GREATER
-                    Id = e.Id.Value,
+                    Id = e.Id.GetIdValue(),
 #else
                     Id = e.Id.IntegerValue,
 #endif
@@ -150,7 +150,7 @@ namespace RevitMCPCommandSet.Services
                 ResultInfo = new ViewElementsResult
                 {
 #if REVIT2024_OR_GREATER
-                    ViewId = activeView.Id.Value,
+                    ViewId = activeView.Id.GetIdValue(),
 #else
                     ViewId = activeView.Id.IntegerValue,
 #endif
@@ -177,7 +177,7 @@ namespace RevitMCPCommandSet.Services
 
             // 添加通用属性
 #if REVIT2024_OR_GREATER
-            properties.Add("ElementId", element.Id.Value.ToString());
+            properties.Add("ElementId", element.Id.GetIdValue().ToString());
 #else
             properties.Add("ElementId", element.Id.IntegerValue.ToString());
 #endif
@@ -214,7 +214,7 @@ namespace RevitMCPCommandSet.Services
                         properties.Add(paramName, param.AsInteger().ToString());
                     else if (param.StorageType == StorageType.ElementId)
 #if REVIT2024_OR_GREATER
-                        properties.Add(paramName, param.AsElementId().Value.ToString());
+                        properties.Add(paramName, param.AsElementId().GetIdValue().ToString());
 #else
                         properties.Add(paramName, param.AsElementId().IntegerValue.ToString());
 #endif

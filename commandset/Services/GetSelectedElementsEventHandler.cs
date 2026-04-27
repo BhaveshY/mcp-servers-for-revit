@@ -49,7 +49,7 @@ namespace RevitMCPCommandSet.Services
                 ResultElements = selectedElements.Select(element => new ElementInfo
                 {
 #if REVIT2024_OR_GREATER
-                    Id = element.Id.Value,
+                    Id = element.Id.GetIdValue(),
 #else
                     Id = element.Id.IntegerValue,
 #endif

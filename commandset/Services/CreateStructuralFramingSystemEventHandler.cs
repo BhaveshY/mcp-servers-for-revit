@@ -181,7 +181,7 @@ namespace RevitMCPCommandSet.Services
                     List<long> beamIdsList = new List<long>();
 
 #if REVIT2024_OR_GREATER
-                    long beamSystemId = beamSystem.Id.Value;
+                    long beamSystemId = beamSystem.Id.GetIdValue();
                     foreach (ElementId beamId in beamIds)
                     {
                         beamIdsList.Add(beamId.Value);

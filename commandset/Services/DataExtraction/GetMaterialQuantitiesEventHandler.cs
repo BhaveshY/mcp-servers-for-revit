@@ -105,9 +105,9 @@ namespace RevitMCPCommandSet.Services.DataExtraction
                         materialData[matId].Volume += volume;
 
 #if REVIT2024_OR_GREATER
-                        if (!materialData[matId].ElementIds.Contains(element.Id.Value))
+                        if (!materialData[matId].ElementIds.Contains(element.Id.GetIdValue()))
                         {
-                            materialData[matId].ElementIds.Add(element.Id.Value);
+                            materialData[matId].ElementIds.Add(element.Id.GetIdValue());
 #else
                         if (!materialData[matId].ElementIds.Contains(element.Id.IntegerValue))
                         {

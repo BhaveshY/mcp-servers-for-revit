@@ -625,12 +625,12 @@ namespace RevitMCPCommandSet.Services
                 foreach (UIView uiView in openViews)
                 {
                     // 检查视图是否打开
-                    if (uiView.ViewId.GetValue() == view.Id.GetValue())
+                    if (uiView.ViewId.GetIdValue() == view.Id.GetIdValue())
                     {
                         info.IsOpen = true;
 
                         // 检查视图是否是当前激活的视图
-                        if (uidoc.ActiveView.Id.GetValue() == view.Id.GetValue())
+                        if (uidoc.ActiveView.Id.GetIdValue() == view.Id.GetIdValue())
                         {
                             info.IsActive = true;
                         }

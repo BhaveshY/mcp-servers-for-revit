@@ -981,7 +981,7 @@ namespace RevitMCPCommandSet.Utils
                  .FirstOrDefault(l => l.Name == levelName);
             if (namesakeLevel != null)
             {
-                levelName = $"{levelName}_{newLevel.Id.GetValue()}";
+                levelName = $"{levelName}_{newLevel.Id.GetIdValue()}";
             }
             newLevel.Name = levelName;
 

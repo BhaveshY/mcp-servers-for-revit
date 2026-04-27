@@ -104,8 +104,8 @@ namespace RevitMCPCommandSet.Services
                                 {
                                     createdTags.Add(new
                                     {
-                                        id = tag.Id.Value.ToString(),
-                                        wallId = wall.Id.Value.ToString(),
+                                        id = tag.Id.GetIdValue().ToString(),
+                                        wallId = wall.Id.GetIdValue().ToString(),
 
                                         wallName = wall.Name,
                                         location = new
@@ -120,7 +120,7 @@ namespace RevitMCPCommandSet.Services
                         }
                         catch (Exception ex)
                         {
-                            errors.Add($"标记墙体 {wall.Id.Value} 出错: {ex.Message}");
+                            errors.Add($"标记墙体 {wall.Id.GetIdValue()} 出错: {ex.Message}");
                         }
 #else
 try
@@ -229,8 +229,8 @@ try
                     Element element = doc.GetElement(elementId);
 
                     if (element != null && element is FamilySymbol symbol &&
-                        (symbol.Category.Id.Value == (int)BuiltInCategory.OST_WallTags ||
-                         symbol.Category.Id.Value == (int)BuiltInCategory.OST_MultiCategoryTags))
+                        (symbol.Category.Id.GetIdValue() == (int)BuiltInCategory.OST_WallTags ||
+                         symbol.Category.Id.GetIdValue() == (int)BuiltInCategory.OST_MultiCategoryTags))
                     {
                         return symbol;
                     }
@@ -242,7 +242,7 @@ try
             FamilySymbol wallTagType = tagCollector.OfClass(typeof(FamilySymbol))
                                                   .WhereElementIsElementType()
                                                   .Where(e => e.Category != null &&
-                                                         e.Category.Id.Value == (int)BuiltInCategory.OST_WallTags)
+                                                         e.Category.Id.GetIdValue() == (int)BuiltInCategory.OST_WallTags)
                                                   .Cast<FamilySymbol>()
                                                   .FirstOrDefault();
 
@@ -252,7 +252,7 @@ try
                 wallTagType = tagCollector.OfClass(typeof(FamilySymbol))
                                          .WhereElementIsElementType()
                                          .Where(e => e.Category != null &&
-                                                e.Category.Id.Value == (int)BuiltInCategory.OST_MultiCategoryTags)
+                                                e.Category.Id.GetIdValue() == (int)BuiltInCategory.OST_MultiCategoryTags)
                                          .Cast<FamilySymbol>()
                                          .FirstOrDefault();
             }

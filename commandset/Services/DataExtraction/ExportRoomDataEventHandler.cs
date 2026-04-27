@@ -56,7 +56,7 @@ namespace RevitMCPCommandSet.Services.DataExtraction
                     var roomData = new RoomDataModel
                     {
 #if REVIT2024_OR_GREATER
-                        Id = room.Id.Value,
+                        Id = room.Id.GetIdValue(),
 #else
                         Id = room.Id.IntegerValue,
 #endif

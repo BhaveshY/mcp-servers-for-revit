@@ -107,7 +107,7 @@ namespace RevitMCPCommandSet.Services
                         grid.Name = uniqueLabel;
 
 #if REVIT2024_OR_GREATER
-                        long gridId = grid.Id.Value;
+                        long gridId = grid.Id.GetIdValue();
 #else
                         long gridId = grid.Id.IntegerValue;
 #endif
@@ -163,7 +163,7 @@ namespace RevitMCPCommandSet.Services
                         grid.Name = uniqueLabel;
 
 #if REVIT2024_OR_GREATER
-                        long gridId = grid.Id.Value;
+                        long gridId = grid.Id.GetIdValue();
 #else
                         long gridId = grid.Id.IntegerValue;
 #endif

@@ -193,7 +193,7 @@ namespace RevitMCPCommandSet.Services
                 {
                     if (existingTag.Room != null)
                     {
-                        roomsWithExistingTags.Add(existingTag.Room.Id.GetValue());
+                        roomsWithExistingTags.Add(existingTag.Room.Id.GetIdValue());
                     }
                 }
 
@@ -239,11 +239,11 @@ namespace RevitMCPCommandSet.Services
                         if (room.Area <= 0) continue;
 
                         // Skip rooms that already have tags
-                        if (roomsWithExistingTags.Contains(room.Id.GetValue()))
+                        if (roomsWithExistingTags.Contains(room.Id.GetIdValue()))
                         {
                             skippedRooms.Add(new
                             {
-                                roomId = room.Id.GetValue().ToString(),
+                                roomId = room.Id.GetIdValue().ToString(),
                                 roomName = room.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? "Room",
                                 roomNumber = room.Number,
                                 reason = "Room already has a tag in this view"
@@ -288,8 +288,8 @@ namespace RevitMCPCommandSet.Services
 
                                 createdTags.Add(new
                                 {
-                                    tagId = tag.Id.GetValue().ToString(),
-                                    roomId = room.Id.GetValue().ToString(),
+                                    tagId = tag.Id.GetIdValue().ToString(),
+                                    roomId = room.Id.GetIdValue().ToString(),
                                     roomName = room.get_Parameter(BuiltInParameter.ROOM_NAME)?.AsString() ?? "Room",
                                     roomNumber = room.Number,
                                     location = new
@@ -303,7 +303,7 @@ namespace RevitMCPCommandSet.Services
                         }
                         catch (Exception ex)
                         {
-                            errors.Add($"Error tagging room {room.Id.GetValue()}: {ex.Message}");
+                            errors.Add($"Error tagging room {room.Id.GetIdValue()}: {ex.Message}");
                         }
                     }
 

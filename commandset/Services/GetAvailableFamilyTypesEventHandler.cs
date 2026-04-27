@@ -67,7 +67,7 @@ namespace RevitMCPCommandSet.Services
                         filteredElements = filteredElements.Where(et =>
                         {
 #if REVIT2024_OR_GREATER
-                            var categoryId = et.Category?.Id.Value;
+                            var categoryId = et.Category?.Id.GetIdValue();
 #else
                             var categoryId = et.Category?.Id.IntegerValue;
 #endif
@@ -111,7 +111,7 @@ namespace RevitMCPCommandSet.Services
                     return new FamilyTypeInfo
                     {
 #if REVIT2024_OR_GREATER
-                        FamilyTypeId = et.Id.Value,
+                        FamilyTypeId = et.Id.GetIdValue(),
 #else
                         FamilyTypeId = et.Id.IntegerValue,
 #endif

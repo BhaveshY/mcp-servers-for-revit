@@ -113,7 +113,7 @@ namespace RevitMCPCommandSet.Services
                                 }
                                 if (requestedTypeId != -1 && requestedTypeId != 0)
                                 {
-                                    _warnings.Add($"Requested wall typeId {requestedTypeId} not found. Defaulted to '{wallType.Name}' (ID: {wallType.Id.GetValue()})");
+                                    _warnings.Add($"Requested wall typeId {requestedTypeId} not found. Defaulted to '{wallType.Name}' (ID: {wallType.Id.GetIdValue()})");
                                 }
                             }
                             break;
@@ -132,7 +132,7 @@ namespace RevitMCPCommandSet.Services
                                 }
                                 if (requestedTypeId != -1 && requestedTypeId != 0)
                                 {
-                                    _warnings.Add($"Requested duct typeId {requestedTypeId} not found. Defaulted to '{ductType.Name}' (ID: {ductType.Id.GetValue()})");
+                                    _warnings.Add($"Requested duct typeId {requestedTypeId} not found. Defaulted to '{ductType.Name}' (ID: {ductType.Id.GetIdValue()})");
                                 }
                             }
                             break;
@@ -159,7 +159,7 @@ namespace RevitMCPCommandSet.Services
                                 }
                                 if (requestedTypeId != -1 && requestedTypeId != 0)
                                 {
-                                    _warnings.Add($"Requested typeId {requestedTypeId} not found. Defaulted to '{symbol.FamilyName}: {symbol.Name}' (ID: {symbol.Id.GetValue()})");
+                                    _warnings.Add($"Requested typeId {requestedTypeId} not found. Defaulted to '{symbol.FamilyName}: {symbol.Name}' (ID: {symbol.Id.GetIdValue()})");
                                 }
                             }
                             break;
