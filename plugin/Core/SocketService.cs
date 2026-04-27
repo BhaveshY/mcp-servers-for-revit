@@ -25,6 +25,9 @@ namespace revit_mcp_plugin.Core
         private ICommandRegistry _commandRegistry;
         private ILogger _logger;
         private CommandExecutor _commandExecutor;
+        private CommandManager _commandManager;
+        private string _revitVersion;
+        private DateTime _initializedAtUtc;
 
         public static SocketService Instance
         {
@@ -64,6 +67,7 @@ namespace revit_mcp_plugin.Core
             // Get the current Revit version.
             var versionAdapter = new RevitMCPSDK.API.Utils.RevitVersionAdapter(_uiApp.Application);
             string currentVersion = versionAdapter.GetRevitVersion();
+            _revitVersion = currentVersion;
             _logger.Info("当前 Revit 版本: {0}\nCurrent Revit version: {0}", currentVersion);
 
 
@@ -88,9 +92,10 @@ namespace revit_mcp_plugin.Core
 
             // 加载命令
             // Load command.
-            CommandManager commandManager = new CommandManager(
+            _commandManager = new CommandManager(
                 _commandRegistry, _logger, configManager, _uiApp);
-            commandManager.LoadCommands();
+            _commandManager.LoadCommands();
+            _initializedAtUtc = DateTime.UtcNow;
 
             _logger.Info($"Socket service initialized on port {_port}");
         }
@@ -239,6 +244,15 @@ namespace revit_mcp_plugin.Core
                     );
                 }
 
+                // Built-in: get_status answers without going through the command registry
+                // or the Revit external-event loop. Safe to call from any view, including
+                // schedules. Returns enough data for the MCP server to gate tool calls
+                // until the plugin is actually ready.
+                if (request.Method == "get_status")
+                {
+                    return CreateSuccessResponse(request.Id, BuildStatus());
+                }
+
                 // 查找命令
                 // Search for the command in the registry.
                 if (!_commandRegistry.TryGetCommand(request.Method, out var command))
@@ -291,6 +305,45 @@ namespace revit_mcp_plugin.Core
             };
 
             return response.ToJson();
+        }
+
+        private object BuildStatus()
+        {
+            // Best-effort active view info. Reading ActiveView from outside Revit's UI
+            // thread can throw or return stale data, so we wrap and degrade to nulls
+            // rather than failing the status call.
+            string activeViewType = null;
+            string activeViewName = null;
+            try
+            {
+                var doc = _uiApp?.ActiveUIDocument;
+                var view = doc?.ActiveView;
+                if (view != null)
+                {
+                    activeViewType = view.ViewType.ToString();
+                    activeViewName = view.Name;
+                }
+            }
+            catch
+            {
+                // expected when called from a non-UI thread; leave nulls
+            }
+
+            return new
+            {
+                status = _isRunning ? "ok" : "stopped",
+                isRunning = _isRunning,
+                port = _port,
+                revitVersion = _revitVersion,
+                initializedAtUtc = _initializedAtUtc == default ? (DateTime?)null : _initializedAtUtc,
+                loadedCommands = _commandManager?.LoadedCommands ?? (System.Collections.Generic.IReadOnlyList<string>)new string[0],
+                failedCommands = _commandManager?.FailedCommands ?? (System.Collections.Generic.IReadOnlyDictionary<string, string>)new System.Collections.Generic.Dictionary<string, string>(),
+                activeView = new
+                {
+                    type = activeViewType,
+                    name = activeViewName
+                }
+            };
         }
 
         private string CreateErrorResponse(string id, int code, string message, object data = null)
