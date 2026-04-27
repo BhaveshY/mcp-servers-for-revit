@@ -29,8 +29,33 @@ The **MCP Server** (TypeScript) translates tool calls from AI clients into WebSo
 
 ## Requirements
 
-- **Node.js 18+** (for the MCP server)
+- **Node.js 20+** (for the MCP server)
+- **Python 3.x** (Windows only — required for `better-sqlite3`'s native build via node-gyp during `npm install`)
 - **Autodesk Revit 2020 - 2026** (any supported version)
+
+### Windows-specific notes
+
+- **PowerShell execution policy:** the `npm.ps1` shim is blocked under `Restricted` or `AllSigned` policy. Either invoke `npm.cmd` explicitly, or run PowerShell with `-ExecutionPolicy Bypass` for the install. The bundled installer (see [One-shot Windows install](#one-shot-windows-install) below) sets `Bypass` for its own process and uses `npm.cmd` directly, so it works regardless of system policy.
+- **PATH after `winget install`:** a running shell does not pick up Machine PATH changes that winget makes. Use full paths (`C:\Program Files\nodejs\node.exe`, `C:\Program Files\nodejs\npm.cmd`) for the install commands, or open a fresh PowerShell after the winget step.
+- **Git Bash / Claude Code bash shell:** these do not inherit the Windows Machine PATH that winget updates. Always use full paths to `node.exe` / `npm.cmd` from a bash shell on Windows.
+
+## One-shot Windows install
+
+For a fresh Windows machine, run [`scripts/install.ps1`](scripts/install.ps1) from a normal PowerShell prompt:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install.ps1
+```
+
+The script is idempotent — re-running it on an already-installed machine is a quiet no-op. It will:
+
+1. Detect/install Node.js LTS, Python 3.12, and .NET 8 SDK via winget
+2. Refresh PATH so it sees the freshly-installed tools without a shell restart
+3. Build the Revit plugin (defaults to `Release R24`; pass `-RevitVersion 2025` etc. for other versions)
+4. Deploy plugin output into `%AppData%\Autodesk\Revit\Addins\<RevitVersion>\`
+5. Run `npm.cmd install && npm.cmd run build` in `server/`
+6. Register the connector in `%UserProfile%\.claude.json` (preserving any existing config)
+7. Smoke-test the MCP stdio handshake
 
 ## Quick Start (Using a Release)
 
@@ -139,6 +164,13 @@ If using a release ZIP, the command set is pre-installed inside the plugin. For 
 | `query_stored_data` | Query stored project and room data |
 | `send_code_to_revit` | Send C# code to Revit to execute |
 | `say_hello` | Display a greeting dialog in Revit (connection test) |
+| `get_status` | Plugin readiness probe — returns loaded/failed commands, Revit version, and active view type |
+
+## Active view requirements
+
+Several Revit APIs the command set uses (element collection scoped to a view, view overrides, hide/isolate, dimension creation, tagging) require the active view to be a **graphical** view — floor plan, ceiling plan, area plan, section, elevation, 3D, detail, drafting, walkthrough, or rendering view. They throw or silently produce nothing when the active view is a schedule, sheet, or drawing list. Before issuing tools like `tag_all_walls`, `color_elements`, `operate_element` (hide/isolate variants), or `create_dimensions`, switch to a graphical view in Revit. Calling `get_status` returns the active view type so you can detect this without a round-trip through every command.
+
+A reusable `RevitMCPCommandSet.Utils.ActiveViewGuard.RequireGraphicalView(uidoc, out string error)` helper is available for command authors who want their handler to fail fast with a clear, user-facing message instead of an opaque Revit API exception. See `commandset/Services/TagWallsEventHandler.cs` for a usage example.
 
 ## Testing
 
