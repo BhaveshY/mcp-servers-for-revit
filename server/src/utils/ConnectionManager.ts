@@ -26,13 +26,21 @@ export async function withRevitConnection<T>(
     // 连接到Revit客户端
     if (!revitClient.isConnected) {
       await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          revitClient.socket.removeListener("connect", onConnect);
+          revitClient.socket.removeListener("error", onError);
+          reject(new Error("连接到Revit客户端失败"));
+        }, 5000);
+
         const onConnect = () => {
+          clearTimeout(timeout);
           revitClient.socket.removeListener("connect", onConnect);
           revitClient.socket.removeListener("error", onError);
           resolve();
         };
 
         const onError = (error: any) => {
+          clearTimeout(timeout);
           revitClient.socket.removeListener("connect", onConnect);
           revitClient.socket.removeListener("error", onError);
           reject(new Error("connect to revit client failed"));
@@ -42,12 +50,6 @@ export async function withRevitConnection<T>(
         revitClient.socket.on("error", onError);
 
         revitClient.connect();
-
-        setTimeout(() => {
-          revitClient.socket.removeListener("connect", onConnect);
-          revitClient.socket.removeListener("error", onError);
-          reject(new Error("连接到Revit客户端失败"));
-        }, 5000);
       });
     }
 

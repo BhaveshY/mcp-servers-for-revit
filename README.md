@@ -29,7 +29,7 @@ The **MCP Server** (TypeScript) translates tool calls from AI clients into WebSo
 
 ## Requirements
 
-- **Node.js 18+** (for the MCP server)
+- **Node.js 20+** (for the MCP server)
 - **Autodesk Revit 2020 - 2026** (any supported version)
 
 ## Quick Start (Using a Release)

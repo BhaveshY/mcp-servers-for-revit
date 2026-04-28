@@ -29,9 +29,14 @@ export async function registerTools(server: McpServer) {
 
       // 动态导入模块
       const module = await import(importPath);
+      const exportedKeys = Object.keys(module);
+
+      if (exportedKeys.length === 0) {
+        continue;
+      }
 
       // 查找并执行注册函数
-      const registerFunctionName = Object.keys(module).find(
+      const registerFunctionName = exportedKeys.find(
         (key) => key.startsWith("register") && typeof module[key] === "function"
       );
 

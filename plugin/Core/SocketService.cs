@@ -25,6 +25,7 @@ namespace revit_mcp_plugin.Core
         private ICommandRegistry _commandRegistry;
         private ILogger _logger;
         private CommandExecutor _commandExecutor;
+        private const int MaxRequestBufferSize = 1024 * 1024;
 
         public static SocketService Instance
         {
@@ -172,6 +173,7 @@ namespace revit_mcp_plugin.Core
             try
             {
                 byte[] buffer = new byte[8192];
+                StringBuilder requestBuffer = new StringBuilder();
 
                 while (_isRunning && tcpClient.Connected)
                 {
@@ -199,13 +201,32 @@ namespace revit_mcp_plugin.Core
 
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     System.Diagnostics.Trace.WriteLine($"收到消息: {message}\nReceived message: {message}");
+                    requestBuffer.Append(message);
 
-                    string response = ProcessJsonRPCRequest(message);
+                    if (requestBuffer.Length > MaxRequestBufferSize)
+                    {
+                        _logger.Error("JSON-RPC request exceeded maximum buffer size");
+                        requestBuffer.Clear();
 
-                    // 发送响应
-                    // Send response.
-                    byte[] responseData = Encoding.UTF8.GetBytes(response);
-                    stream.Write(responseData, 0, responseData.Length);
+                        string response = CreateErrorResponse(
+                            null,
+                            JsonRPCErrorCodes.InvalidRequest,
+                            "JSON-RPC request is too large"
+                        );
+                        byte[] responseData = Encoding.UTF8.GetBytes(response);
+                        stream.Write(responseData, 0, responseData.Length);
+                        continue;
+                    }
+
+                    while (TryExtractJsonMessage(requestBuffer, out string requestJson))
+                    {
+                        string response = ProcessJsonRPCRequest(requestJson);
+
+                        // 发送响应
+                        // Send response.
+                        byte[] responseData = Encoding.UTF8.GetBytes(response);
+                        stream.Write(responseData, 0, responseData.Length);
+                    }
                 }
             }
             catch(Exception)
@@ -216,6 +237,80 @@ namespace revit_mcp_plugin.Core
             {
                 tcpClient.Close();
             }
+        }
+
+        private bool TryExtractJsonMessage(StringBuilder buffer, out string message)
+        {
+            message = null;
+            int start = -1;
+            int depth = 0;
+            bool inString = false;
+            bool isEscaped = false;
+
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                char current = buffer[i];
+
+                if (start < 0)
+                {
+                    if (char.IsWhiteSpace(current))
+                    {
+                        continue;
+                    }
+
+                    if (current != '{')
+                    {
+                        message = buffer.ToString(0, i + 1);
+                        buffer.Remove(0, i + 1);
+                        return true;
+                    }
+
+                    start = i;
+                    depth = 1;
+                    continue;
+                }
+
+                if (isEscaped)
+                {
+                    isEscaped = false;
+                    continue;
+                }
+
+                if (current == '\\' && inString)
+                {
+                    isEscaped = true;
+                    continue;
+                }
+
+                if (current == '"')
+                {
+                    inString = !inString;
+                    continue;
+                }
+
+                if (inString)
+                {
+                    continue;
+                }
+
+                if (current == '{')
+                {
+                    depth++;
+                }
+                else if (current == '}')
+                {
+                    depth--;
+                    if (depth == 0)
+                    {
+                        int length = i - start + 1;
+                        message = buffer.ToString(start, length);
+                        buffer.Remove(0, i + 1);
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private string ProcessJsonRPCRequest(string requestJson)
