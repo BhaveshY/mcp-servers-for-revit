@@ -226,7 +226,7 @@ try
             {
                 if (int.TryParse(_tagTypeId, out int id))
                 {
-                    ElementId elementId = ElementIdExtensions.ToElementId(id);
+                    ElementId elementId = RevitMCPCommandSet.Utils.ElementIdExtensions.ToElementId(id);
                     Element element = doc.GetElement(elementId);
 
                     if (element != null && element is FamilySymbol symbol &&
@@ -265,7 +265,7 @@ try
             {
                 if (int.TryParse(_tagTypeId, out int id))
                 {
-                    ElementId elementId = ElementIdExtensions.ToElementId(id);
+                    ElementId elementId = RevitMCPCommandSet.Utils.ElementIdExtensions.ToElementId(id);
                     Element element = doc.GetElement(elementId);
 
                     if (element != null && element is FamilySymbol symbol &&

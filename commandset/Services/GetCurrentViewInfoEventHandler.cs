@@ -43,7 +43,7 @@ namespace RevitMCPCommandSet.Services
                     DetailLevel = activeView.DetailLevel.ToString(),
                 };
             }
-            catch (Exception ex)
+            catch
             {
                 TaskDialog.Show("error", "获取信息失败");
             }

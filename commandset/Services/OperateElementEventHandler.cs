@@ -102,7 +102,7 @@ namespace RevitMCPCommandSet.Services
             Document doc = uidoc.Document;
 
             // 将int类型的元素ID转换为ElementId类型
-            ICollection<ElementId> elementIds = setting.ElementIds.Select(id => ElementIdExtensions.ToElementId(id)).ToList();
+            ICollection<ElementId> elementIds = setting.ElementIds.Select(id => RevitMCPCommandSet.Utils.ElementIdExtensions.ToElementId(id)).ToList();
 
             // 解析操作类型
             ElementOperationType action;

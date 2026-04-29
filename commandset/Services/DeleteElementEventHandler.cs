@@ -41,7 +41,7 @@ namespace RevitMCPCommandSet.Services
                 {
                     if (int.TryParse(idStr, out int elementIdValue))
                     {
-                        var elementId = ElementIdExtensions.ToElementId(elementIdValue);
+                        var elementId = RevitMCPCommandSet.Utils.ElementIdExtensions.ToElementId(elementIdValue);
                         // 检查元素是否存在
                         if (doc.GetElement(elementId) != null)
                         {
