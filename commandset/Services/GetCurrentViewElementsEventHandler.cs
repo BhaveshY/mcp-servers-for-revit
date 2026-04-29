@@ -78,9 +78,12 @@ namespace RevitMCPCommandSet.Services
                 var activeView = doc.ActiveView;
 
 
-                // 合并所有类别
+                bool useDefaultCategories =
+                    (_modelCategoryList == null || !_modelCategoryList.Any()) &&
+                    (_annotationCategoryList == null || !_annotationCategoryList.Any());
+
                 List<string> allCategories = new List<string>();
-                if (_modelCategoryList == null && _annotationCategoryList == null)
+                if (useDefaultCategories)
                 {
                     allCategories.AddRange(_defaultModelCategories);
                     allCategories.AddRange(_defaultAnnotationCategories);
@@ -91,17 +94,12 @@ namespace RevitMCPCommandSet.Services
                     allCategories.AddRange(_annotationCategoryList ?? new List<string>());
                 }
 
-                // 获取当前视图中的所有元素
                 var collector = new FilteredElementCollector(doc, activeView.Id)
                     .WhereElementIsNotElementType();
-
-                // 获取所有元素
-                IList<Element> elements = collector.ToElements();
 
                 // 按类别筛选
                 if (allCategories.Count > 0)
                 {
-                    // 转换字符串类别为枚举
                     List<BuiltInCategory> builtInCategories = new List<BuiltInCategory>();
                     foreach (string categoryName in allCategories)
                     {
@@ -110,31 +108,31 @@ namespace RevitMCPCommandSet.Services
                             builtInCategories.Add(category);
                         }
                     }
-                    // 如果成功解析了类别，则使用类别过滤器
                     if (builtInCategories.Count > 0)
                     {
                         ElementMulticategoryFilter categoryFilter = new ElementMulticategoryFilter(builtInCategories);
-                        elements = new FilteredElementCollector(doc, activeView.Id)
-                            .WhereElementIsNotElementType()
-                            .WherePasses(categoryFilter)
-                            .ToElements();
+                        collector = collector.WherePasses(categoryFilter);
                     }
                 }
+
+                IEnumerable<Element> elements = collector;
 
                 // 过滤隐藏的元素
                 if (!_includeHidden)
                 {
-                    elements = elements.Where(e => !e.IsHidden(activeView)).ToList();
+                    elements = elements.Where(e => !e.IsHidden(activeView));
                 }
 
                 // 限制返回数量
-                if (_limit > 0 && elements.Count > _limit)
+                if (_limit > 0)
                 {
-                    elements = elements.Take(_limit).ToList();
+                    elements = elements.Take(_limit);
                 }
 
+                var elementList = elements.ToList();
+
                 // 构建结果
-                var elementInfos = elements.Select(e => new ElementInfo
+                var elementInfos = elementList.Select(e => new ElementInfo
                 {
 #if REVIT2024_OR_GREATER
                     Id = e.Id.Value,
@@ -155,7 +153,9 @@ namespace RevitMCPCommandSet.Services
                     ViewId = activeView.Id.IntegerValue,
 #endif
                     ViewName = activeView.Name,
-                    TotalElementsInView = new FilteredElementCollector(doc, activeView.Id).GetElementCount(),
+                    TotalElementsInView = new FilteredElementCollector(doc, activeView.Id)
+                        .WhereElementIsNotElementType()
+                        .GetElementCount(),
                     FilteredElementCount = elementInfos.Count,
                     Elements = elementInfos
                 };
@@ -204,7 +204,7 @@ namespace RevitMCPCommandSet.Services
             foreach (var paramName in commonParams)
             {
                 Parameter param = element.LookupParameter(paramName);
-                if (param != null && !param.IsReadOnly)
+                if (param != null && param.HasValue)
                 {
                     if (param.StorageType == StorageType.String)
                         properties.Add(paramName, param.AsString() ?? "");

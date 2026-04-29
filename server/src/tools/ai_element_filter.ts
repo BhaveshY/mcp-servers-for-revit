@@ -2,6 +2,12 @@ import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { withRevitConnection } from "../utils/ConnectionManager.js";
 
+const pointSchema = z.object({
+  x: z.number().describe("X coordinate in millimeters"),
+  y: z.number().describe("Y coordinate in millimeters"),
+  z: z.number().describe("Z coordinate in millimeters"),
+});
+
 export function registerAIElementFilterTool(server: McpServer) {
   server.tool(
     "ai_element_filter",
@@ -33,36 +39,14 @@ export function registerAIElementFilterTool(server: McpServer) {
           .optional()
           .describe("Determines whether to only return elements that are visible in the current view. When set to true, only elements visible in the current view will be returned. Note: This filter only applies to element instances, not type elements."),
         boundingBoxMin: z
-          .object({
-            p0: z.object({
-              x: z.number().describe("X coordinate of start point"),
-              y: z.number().describe("Y coordinate of start point"),
-              z: z.number().describe("Z coordinate of start point"),
-            }),
-            p1: z.object({
-              x: z.number().describe("X coordinate of end point"),
-              y: z.number().describe("Y coordinate of end point"),
-              z: z.number().describe("Z coordinate of end point"),
-            }),
-          })
+          .object(pointSchema.shape)
           .optional()
           .describe("The minimum point coordinates (in mm) for spatial bounding box filtering. When set along with boundingBoxMax, only elements that intersect with this bounding box will be returned. Set to null to disable this filter."),
         boundingBoxMax: z
-          .object({
-            p0: z.object({
-              x: z.number().describe("X coordinate of start point"),
-              y: z.number().describe("Y coordinate of start point"),
-              z: z.number().describe("Z coordinate of start point"),
-            }),
-            p1: z.object({
-              x: z.number().describe("X coordinate of end point"),
-              y: z.number().describe("Y coordinate of end point"),
-              z: z.number().describe("Z coordinate of end point"),
-            }),
-          })
+          .object(pointSchema.shape)
           .optional()
           .describe("The maximum point coordinates (in mm) for spatial bounding box filtering. When set along with boundingBoxMin, only elements that intersect with this bounding box will be returned. Set to null to disable this filter."),
-          maxElements: z
+        maxElements: z
           .number()
           .optional()
           .describe("The maximum number of elements to find in a single tool invocation. Default is 50. Values exceeding 50 are not recommended for performance reasons."),

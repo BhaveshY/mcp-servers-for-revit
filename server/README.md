@@ -2,17 +2,23 @@
 
 MCP server for interacting with Autodesk Revit through AI assistants like Claude.
 
-This package is the MCP server component of [mcp-servers-for-revit](https://github.com/mcp-servers-for-revit/mcp-servers-for-revit). It exposes Revit operations as MCP tools that AI clients can call. The server communicates with the [Revit plugin](https://github.com/mcp-servers-for-revit/mcp-servers-for-revit) over WebSocket to execute commands inside Revit.
+This package is the MCP server component of [mcp-servers-for-revit](https://github.com/BhaveshY/mcp-servers-for-revit). It exposes Revit operations as MCP tools that AI clients can call. The server communicates with the [Revit plugin](https://github.com/BhaveshY/mcp-servers-for-revit) over local TCP JSON-RPC to execute commands inside Revit.
 
 > [!NOTE]
-> This server requires the mcp-servers-for-revit Revit plugin to be installed and running inside Revit. See the [full project README](https://github.com/mcp-servers-for-revit/mcp-servers-for-revit) for setup instructions.
+> This server requires the mcp-servers-for-revit Revit plugin to be installed and running inside Revit. See the [full project README](https://github.com/BhaveshY/mcp-servers-for-revit) for setup instructions.
 
 ## Setup
 
 **Claude Code**
 
 ```bash
-claude mcp add mcp-server-for-revit -- npx -y mcp-server-for-revit
+claude mcp add --transport stdio mcp-server-for-revit -- npx -y mcp-server-for-revit
+```
+
+On Windows, if `npx` is not resolved directly by Claude Code, use:
+
+```bash
+claude mcp add --transport stdio mcp-server-for-revit -- cmd /c npx -y mcp-server-for-revit
 ```
 
 **Claude Desktop**
@@ -32,10 +38,20 @@ Claude Desktop → Settings → Developer → Edit Config → `claude_desktop_co
 
 Restart Claude Desktop. When you see the hammer icon, the MCP server is connected.
 
+Optional environment variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `REVIT_MCP_HOST` | `127.0.0.1` | Revit bridge host |
+| `REVIT_MCP_PORT` | `8080` | Revit bridge port |
+| `REVIT_MCP_CONNECT_TIMEOUT_MS` | `5000` | TCP connection timeout |
+| `REVIT_MCP_COMMAND_TIMEOUT_MS` | `120000` | Per-command timeout |
+
 ## Supported Tools
 
 | Tool | Description |
 | ---- | ----------- |
+| `get_revit_connection_status` | Check whether the local Revit bridge is reachable |
 | `get_current_view_info` | Get current active view info |
 | `get_current_view_elements` | Get elements from the current active view |
 | `get_available_family_types` | Get available family types in current project |
@@ -72,4 +88,4 @@ npm run build
 
 ## License
 
-[MIT](https://github.com/mcp-servers-for-revit/mcp-servers-for-revit/blob/main/LICENSE)
+[MIT](https://github.com/BhaveshY/mcp-servers-for-revit/blob/main/LICENSE)

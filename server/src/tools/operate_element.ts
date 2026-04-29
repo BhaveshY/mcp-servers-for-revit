@@ -16,8 +16,20 @@ export function registerOperateElementTool(server: McpServer) {
             )
             .describe("Array of Revit element IDs to perform the specified action on"),
           action: z
-            .string()
-            .describe("The operation to perform on elements. Valid values: Select, SelectionBox, SetColor, SetTransparency, Delete, Hide, TempHide, Isolate, Unhide, ResetIsolate, Highlight. Select enables direct element selection in the active view. SelectionBox allows selection of elements by drawing a rectangular window in the view. SetColor changes the color of elements (requires elementColor parameter). SetTransparency adjusts element transparency (requires transparencyValue parameter). Highlight is a convenience operation that sets elements to red color (internally calls SetColor with red). Delete permanently removes elements from the project. Hide makes elements invisible in the current view until explicitly shown. TempHide temporarily hides elements in the current view. Isolate displays only selected elements while hiding all others. Unhide reveals previously hidden elements. ResetIsolate restores normal visibility to the view."),
+            .enum([
+              "Select",
+              "SelectionBox",
+              "SetColor",
+              "SetTransparency",
+              "Delete",
+              "Hide",
+              "TempHide",
+              "Isolate",
+              "Unhide",
+              "ResetIsolate",
+              "Highlight",
+            ])
+            .describe("The operation to perform on elements. Highlight is a convenience operation that applies a red color override."),
           transparencyValue: z
             .number()
             .default(50)

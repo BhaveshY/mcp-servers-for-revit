@@ -1,53 +1,64 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { registerAIElementFilterTool } from "./ai_element_filter.js";
+import { registerAnalyzeModelStatisticsTool } from "./analyze_model_statistics.js";
+import { registerColorElementsTool } from "./color_elements.js";
+import { registerCreateDimensionsTool } from "./create_dimensions.js";
+import { registerCreateGridTool } from "./create_grid.js";
+import { registerCreateLevelTool } from "./create_level.js";
+import { registerCreateLineBasedElementTool } from "./create_line_based_element.js";
+import { registerCreatePointBasedElementTool } from "./create_point_based_element.js";
+import { registerCreateRoomTool } from "./create_room.js";
+import { registerCreateStructuralFramingSystemTool } from "./create_structural_framing_system.js";
+import { registerCreateSurfaceBasedElementTool } from "./create_surface_based_element.js";
+import { registerDeleteElementTool } from "./delete_element.js";
+import { registerExportRoomDataTool } from "./export_room_data.js";
+import { registerGetAvailableFamilyTypesTool } from "./get_available_family_types.js";
+import { registerGetCurrentViewElementsTool } from "./get_current_view_elements.js";
+import { registerGetCurrentViewInfoTool } from "./get_current_view_info.js";
+import { registerGetMaterialQuantitiesTool } from "./get_material_quantities.js";
+import { registerGetRevitConnectionStatusTool } from "./get_revit_connection_status.js";
+import { registerGetSelectedElementsTool } from "./get_selected_elements.js";
+import { registerOperateElementTool } from "./operate_element.js";
+import { registerQueryStoredDataTool } from "./query_stored_data.js";
+import { registerSayHelloTool } from "./say_hello.js";
+import { registerSendCodeToRevitTool } from "./send_code_to_revit.js";
+import { registerStoreProjectDataTool } from "./store_project_data.js";
+import { registerStoreRoomDataTool } from "./store_room_data.js";
+import { registerTagAllRoomsTool } from "./tag_all_rooms.js";
+import { registerTagAllWallsTool } from "./tag_all_walls.js";
+
+const toolRegistrars = [
+  registerGetRevitConnectionStatusTool,
+  registerGetCurrentViewInfoTool,
+  registerGetCurrentViewElementsTool,
+  registerGetSelectedElementsTool,
+  registerGetAvailableFamilyTypesTool,
+  registerAIElementFilterTool,
+  registerAnalyzeModelStatisticsTool,
+  registerGetMaterialQuantitiesTool,
+  registerExportRoomDataTool,
+  registerCreatePointBasedElementTool,
+  registerCreateLineBasedElementTool,
+  registerCreateSurfaceBasedElementTool,
+  registerCreateGridTool,
+  registerCreateStructuralFramingSystemTool,
+  registerCreateRoomTool,
+  registerCreateLevelTool,
+  registerCreateDimensionsTool,
+  registerOperateElementTool,
+  registerColorElementsTool,
+  registerDeleteElementTool,
+  registerTagAllWallsTool,
+  registerTagAllRoomsTool,
+  registerStoreProjectDataTool,
+  registerStoreRoomDataTool,
+  registerQueryStoredDataTool,
+  registerSendCodeToRevitTool,
+  registerSayHelloTool,
+];
 
 export async function registerTools(server: McpServer) {
-  // 获取当前文件的目录路径
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-
-  // 读取tools目录下的所有文件
-  const files = fs.readdirSync(__dirname);
-
-  // 过滤出.ts或.js文件，但排除index文件和register文件
-  const toolFiles = files.filter(
-    (file) =>
-      (file.endsWith(".ts") || file.endsWith(".js")) &&
-      file !== "index.ts" &&
-      file !== "index.js" &&
-      file !== "register.ts" &&
-      file !== "register.js"
-  );
-
-  // 动态导入并注册每个工具
-  for (const file of toolFiles) {
-    try {
-      // 构建导入路径
-      const importPath = `./${file.replace(/\.(ts|js)$/, ".js")}`;
-
-      // 动态导入模块
-      const module = await import(importPath);
-      const exportedKeys = Object.keys(module);
-
-      if (exportedKeys.length === 0) {
-        continue;
-      }
-
-      // 查找并执行注册函数
-      const registerFunctionName = exportedKeys.find(
-        (key) => key.startsWith("register") && typeof module[key] === "function"
-      );
-
-      if (registerFunctionName) {
-        module[registerFunctionName](server);
-        console.error(`已注册工具: ${file}`);
-      } else {
-        console.warn(`警告: 在文件 ${file} 中未找到注册函数`);
-      }
-    } catch (error) {
-      console.error(`注册工具 ${file} 时出错:`, error);
-    }
+  for (const registerTool of toolRegistrars) {
+    registerTool(server);
   }
 }

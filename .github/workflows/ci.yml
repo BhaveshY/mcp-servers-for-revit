@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-revit-2024:
+    name: Windows / Revit 2024 Build
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build MCP server
+        working-directory: server
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build Revit 2024 plugin and command set
+        run: msbuild mcp-servers-for-revit.sln -p:Configuration="Release R24" -restore
+
+      - name: Verify Revit 2024 add-in layout
+        shell: pwsh
+        run: |
+          $addinDir = "plugin/bin/AddIn 2024 Release R24"
+          $requiredPaths = @(
+            "$addinDir/mcp-servers-for-revit.addin",
+            "$addinDir/revit_mcp_plugin/RevitMCPPlugin.dll",
+            "$addinDir/revit_mcp_plugin/Commands/RevitMCPCommandSet/command.json",
+            "$addinDir/revit_mcp_plugin/Commands/RevitMCPCommandSet/2024/RevitMCPCommandSet.dll"
+          )
+
+          foreach ($path in $requiredPaths) {
+            if (!(Test-Path $path)) {
+              throw "Missing required Revit 2024 artifact: $path"
+            }
+          }

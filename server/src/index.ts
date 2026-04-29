@@ -2,22 +2,33 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerTools } from "./tools/register.js";
+import { closeRevitConnection } from "./utils/ConnectionManager.js";
 
-// 创建服务器实例
-const server = new McpServer({
-  name: "mcp-server-for-revit",
-  version: "1.0.0",
-});
+const server = new McpServer(
+  {
+    name: "mcp-server-for-revit",
+    version: "1.0.0",
+  },
+  {
+    instructions:
+      "Use this server for Autodesk Revit model inspection, BIM data extraction, element creation/modification, annotation, and Revit automation tasks. Start with get_revit_connection_status when Revit connectivity is uncertain. Prefer read-only tools for discovery before write/destructive tools. Keep model-query limits focused to avoid oversized outputs in Claude Code.",
+  }
+);
 
-// 启动服务器
 async function main() {
-  // 注册工具
   await registerTools(server);
 
-  // 连接到传输层
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Revit MCP Server start success");
+  console.error("Revit MCP server started");
+}
+
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, async () => {
+    closeRevitConnection();
+    await server.close();
+    process.exit(0);
+  });
 }
 
 main().catch((error) => {

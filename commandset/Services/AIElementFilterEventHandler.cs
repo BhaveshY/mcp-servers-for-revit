@@ -60,12 +60,13 @@ namespace RevitMCPCommandSet.Services
                     throw new Exception("未在项目中找到指定元素，请检查过滤器设置是否正确");
                 // 过滤器最大个数限制
                 string message = "";
+                int totalMatchedCount = elementList.Count;
                 if (FilterSetting.MaxElements > 0)
                 {
-                    if (elementList.Count > FilterSetting.MaxElements)
+                    if (totalMatchedCount > FilterSetting.MaxElements)
                     {
                         elementList = elementList.Take(FilterSetting.MaxElements).ToList();
-                        message = $"。此外，符合过滤条件的共有 {elementList.Count} 个元素，仅显示前 {FilterSetting.MaxElements} 个";
+                        message = $"。此外，符合过滤条件的共有 {totalMatchedCount} 个元素，仅显示前 {FilterSetting.MaxElements} 个";
                     }
                 }
 

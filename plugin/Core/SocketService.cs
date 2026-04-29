@@ -79,13 +79,10 @@ namespace revit_mcp_plugin.Core
             configManager.LoadConfiguration();
             
 
-            //// 从配置中读取服务端口
-            //// Read the service port from the configuration.
-            //if (configManager.Config.Settings.Port > 0)
-            //{
-            //    _port = configManager.Config.Settings.Port;
-            //}
-            _port = 8080; // 固定端口号 - Hard-wired port number.
+            if (configManager.Config?.Settings?.Port > 0)
+            {
+                _port = configManager.Config.Settings.Port;
+            }
 
             // 加载命令
             // Load command.
@@ -103,7 +100,7 @@ namespace revit_mcp_plugin.Core
             try
             {
                 _isRunning = true;
-                _listener = new TcpListener(IPAddress.Any, _port);
+                _listener = new TcpListener(IPAddress.Loopback, _port);
                 _listener.Start();
 
                 _listenerThread = new Thread(ListenForClients)
@@ -112,9 +109,10 @@ namespace revit_mcp_plugin.Core
                 };
                 _listenerThread.Start();              
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 _isRunning = false;
+                _logger.Error("Failed to start socket service on 127.0.0.1:{0}: {1}", _port, ex.Message);
             }
         }
 
@@ -134,9 +132,9 @@ namespace revit_mcp_plugin.Core
                     _listenerThread.Join(1000);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // log error
+                _logger.Error("Failed to stop socket service: {0}", ex.Message);
             }
         }
 
@@ -155,13 +153,16 @@ namespace revit_mcp_plugin.Core
                     clientThread.Start(client);
                 }
             }
-            catch (SocketException)
+            catch (SocketException ex)
             {
-                
+                if (_isRunning)
+                {
+                    _logger.Error("Socket listener error: {0}", ex.Message);
+                }
             }
-            catch(Exception)
+            catch(Exception ex)
             {
-                // log
+                _logger.Error("Unexpected socket listener error: {0}", ex.Message);
             }
         }
 
@@ -229,9 +230,9 @@ namespace revit_mcp_plugin.Core
                     }
                 }
             }
-            catch(Exception)
+            catch(Exception ex)
             {
-                // log
+                _logger.Error("Client communication error: {0}", ex.Message);
             }
             finally
             {
@@ -334,26 +335,7 @@ namespace revit_mcp_plugin.Core
                     );
                 }
 
-                // 查找命令
-                // Search for the command in the registry.
-                if (!_commandRegistry.TryGetCommand(request.Method, out var command))
-                {
-                    return CreateErrorResponse(request.Id, JsonRPCErrorCodes.MethodNotFound,
-                        $"Method '{request.Method}' not found");
-                }
-
-                // 执行命令
-                // Execute command.
-                try
-                {                
-                    object result = command.Execute(request.GetParamsObject(), request.Id);
-
-                    return CreateSuccessResponse(request.Id, result);
-                }
-                catch (Exception ex)
-                {
-                    return CreateErrorResponse(request.Id, JsonRPCErrorCodes.InternalError, ex.Message);
-                }
+                return _commandExecutor.ExecuteCommand(request);
             }
             catch (JsonException)
             {

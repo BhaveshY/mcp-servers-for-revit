@@ -1,4 +1,4 @@
-[![Cover Image](./assets/cover.png?v=2)](https://github.com/mcp-servers-for-revit/mcp-servers-for-revit)
+[![Cover Image](./assets/cover.png?v=2)](https://github.com/BhaveshY/mcp-servers-for-revit)
 
 # mcp-servers-for-revit
 
@@ -20,21 +20,22 @@ flowchart LR
     Revit["Revit API"]
 
     Client <-->|stdio| Server
-    Server <-->|WebSocket| Plugin
+    Server <-->|local TCP JSON-RPC| Plugin
     Plugin -->|loads| CommandSet
     CommandSet -->|executes| Revit
 ```
 
-The **MCP Server** (TypeScript) translates tool calls from AI clients into WebSocket messages. The **Revit Plugin** (C#) runs inside Revit, listens for those messages, and dispatches them to the **Command Set** (C#), which executes the actual Revit API operations and returns results back up the chain.
+The **MCP Server** (TypeScript) translates tool calls from AI clients into local TCP JSON-RPC messages. The **Revit Plugin** (C#) runs inside Revit, listens on loopback by default, and dispatches messages to the **Command Set** (C#), which executes the actual Revit API operations and returns results back up the chain.
 
 ## Requirements
 
 - **Node.js 20+** (for the MCP server)
 - **Autodesk Revit 2020 - 2026** (any supported version)
+- **Windows 11 + Revit 2024** is a primary supported target (`Debug R24` / `Release R24`, .NET Framework 4.8)
 
 ## Quick Start (Using a Release)
 
-1. Download the ZIP for your Revit version from the [Releases](https://github.com/mcp-servers-for-revit/mcp-servers-for-revit/releases) page (e.g., `mcp-servers-for-revit-v1.0.0-Revit2025.zip`)
+1. Download the ZIP for your Revit version from the [Releases](https://github.com/BhaveshY/mcp-servers-for-revit/releases) page (e.g., `mcp-servers-for-revit-v1.0.0-Revit2025.zip`)
 
 2. Extract the ZIP and copy the contents to your Revit addins folder:
    ```
@@ -70,7 +71,13 @@ The MCP server is published as an npm package and can be run directly with `npx`
 Run this in a **terminal** (not inside Claude Code):
 
 ```bash
-claude mcp add mcp-server-for-revit -- cmd /c npx -y mcp-server-for-revit
+claude mcp add --transport stdio mcp-server-for-revit -- npx -y mcp-server-for-revit
+```
+
+On Windows, if `npx` is not resolved directly by Claude Code, use:
+
+```bash
+claude mcp add --transport stdio mcp-server-for-revit -- cmd /c npx -y mcp-server-for-revit
 ```
 
 **Claude Desktop**
@@ -91,6 +98,15 @@ Claude Desktop → Settings → Developer → Edit Config → `claude_desktop_co
 Restart Claude Desktop. When you see the hammer icon, the MCP server is connected.
 
 ![Claude Desktop connection](./assets/claude.png)
+
+Optional server environment variables:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `REVIT_MCP_HOST` | `127.0.0.1` | Revit bridge host |
+| `REVIT_MCP_PORT` | `8080` | Revit bridge port |
+| `REVIT_MCP_CONNECT_TIMEOUT_MS` | `5000` | TCP connection timeout |
+| `REVIT_MCP_COMMAND_TIMEOUT_MS` | `120000` | Per-command timeout |
 
 ## Revit Plugin Setup
 
@@ -114,6 +130,7 @@ If using a release ZIP, the command set is pre-installed inside the plugin. For 
 | Tool | Description |
 | ---- | ----------- |
 | `get_current_view_info` | Get current active view info |
+| `get_revit_connection_status` | Check whether the local Revit bridge is reachable |
 | `get_current_view_elements` | Get elements from the current active view |
 | `get_available_family_types` | Get available family types in current project |
 | `get_selected_elements` | Get currently selected elements |
@@ -142,7 +159,7 @@ If using a release ZIP, the command set is pre-installed inside the plugin. For 
 
 ## Testing
 
-The test project uses [Nice3point.TUnit.Revit](https://github.com/Nice3point/RevitUnit) to run integration tests against a live Revit instance. No separate addin installation is required — the framework injects into the running Revit process automatically.
+The test project uses [Nice3point.TUnit.Revit](https://github.com/Nice3point/RevitUnit) to run integration tests against a live Revit instance. No separate addin installation is required — the framework injects into the running Revit process automatically. The plugin and command set support Revit 2024 via the `R24` build configurations; CI builds `Release R24` on Windows and verifies the add-in artifact layout. The current integration test project is configured for Revit 2025/2026 only.
 
 ### Prerequisites
 
@@ -223,6 +240,8 @@ public class MyTests : RevitApiTest
 
 ## Development
 
+See [Optimization Roadmap](docs/optimization-roadmap.md) for the current hardening plan and next best improvements for Claude Code + Revit 2024.
+
 ### MCP Server
 
 ```bash
@@ -249,7 +268,7 @@ mcp-servers-for-revit/
 ├── mcp-servers-for-revit.sln    # Combined solution (plugin + commandset + tests)
 ├── command.json     # Command set manifest
 ├── server/          # MCP server (TypeScript) - tools exposed to AI clients
-├── plugin/          # Revit add-in (C#) - WebSocket bridge inside Revit
+├── plugin/          # Revit add-in (C#) - local TCP bridge inside Revit
 ├── commandset/      # Command implementations (C#) - Revit API operations
 ├── tests/           # Integration tests (C#) - TUnit tests against live Revit
 ├── assets/          # Images for documentation

@@ -208,11 +208,17 @@ namespace RevitMCPCommandSet.Services
                     return true;
 
                 case ElementOperationType.SetColor:
+                case ElementOperationType.Highlight:
                     // 将元素设置为指定颜色
                     using (Transaction trans = new Transaction(doc, "设置元素颜色"))
                     {
                         trans.Start();
-                        SetElementsColor(doc, elementIds, setting.ColorValue);
+                        SetElementsColor(
+                            doc,
+                            elementIds,
+                            action == ElementOperationType.Highlight
+                                ? new int[] { 255, 0, 0 }
+                                : setting.ColorValue);
                         trans.Commit();
                     }
                     // 滚动到这些元素使其可见

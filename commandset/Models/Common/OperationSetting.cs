@@ -61,6 +61,11 @@ namespace RevitMCPCommandSet.Models.Common
         /// 重置隔离（显示所有图元）
         /// </summary>
         ResetIsolate,
+
+        /// <summary>
+        /// 高亮图元
+        /// </summary>
+        Highlight,
     }
 
 
