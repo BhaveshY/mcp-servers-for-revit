@@ -52,7 +52,10 @@ namespace revit_mcp_plugin.Core
             _logger.Info("开始加载命令\nStart loading command.");
             string currentVersion = _versionAdapter.GetRevitVersion();
             _logger.Info("当前 Revit 版本: {0}\nCurrent Revit version: {0}", currentVersion);
-            _commandRegistry.ClearCommands();
+            if (_commandRegistry is RevitCommandRegistry revitCommandRegistry)
+            {
+                revitCommandRegistry.ClearCommands();
+            }
 
             if (_configManager.Config?.Commands == null || !_configManager.Config.Commands.Any())
             {
