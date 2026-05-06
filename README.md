@@ -33,6 +33,22 @@ The **MCP Server** (TypeScript) translates tool calls from AI clients into local
 - **Autodesk Revit 2020 - 2026** (any supported version)
 - **Windows 11 + Revit 2024** is a primary supported target (`Debug R24` / `Release R24`, .NET Framework 4.8)
 
+## One-shot Windows Agent Install
+
+For Claude Code or Codex agents installing this on a non-coding Windows PC,
+use the agent handoff in [docs/AGENT_WINDOWS_INSTALL.md](docs/AGENT_WINDOWS_INSTALL.md).
+
+From the repository root:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-windows.ps1
+```
+
+The installer detects Revit 2020-2026, installs Node.js when missing, builds the
+local MCP server, installs the Revit add-in for detected Revit versions, updates
+Claude Code/Claude Desktop/Codex MCP config where available, and prints the
+short next steps for the user.
+
 ## Quick Start (Using a Release)
 
 1. Download the ZIP for your Revit version from the [Releases](https://github.com/BhaveshY/mcp-servers-for-revit/releases) page (e.g., `mcp-servers-for-revit-v1.0.0-Revit2025.zip`)
