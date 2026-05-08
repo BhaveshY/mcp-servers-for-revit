@@ -40,6 +40,7 @@ Restart Claude Desktop. When you see the hammer icon, the MCP server is connecte
 | `get_current_view_elements` | Get elements from the current active view |
 | `get_available_family_types` | Get available family types in current project |
 | `get_selected_elements` | Get currently selected elements |
+| `list_open_documents` | List open Revit documents and identify the active one |
 | `get_material_quantities` | Calculate material quantities and takeoffs |
 | `ai_element_filter` | Intelligent element querying tool for AI assistants |
 | `analyze_model_statistics` | Analyze model complexity with element counts |
@@ -61,7 +62,6 @@ Restart Claude Desktop. When you see the hammer icon, the MCP server is connecte
 | `store_room_data` | Store room metadata in local database |
 | `query_stored_data` | Query stored project and room data |
 | `send_code_to_revit` | Send C# code to Revit to execute |
-| `say_hello` | Display a greeting dialog in Revit (connection test) |
 
 ## Development
 

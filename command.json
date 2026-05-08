@@ -9,11 +9,6 @@
   },
   "commands": [
     {
-      "commandName": "say_hello",
-      "description": "Displays a greeting dialog",
-      "assemblyPath": "RevitMCPCommandSet.dll"
-    },
-    {
       "commandName": "get_available_family_types",
       "description": "get available family types",
       "assemblyPath": "RevitMCPCommandSet.dll"
@@ -31,6 +26,11 @@
     {
       "commandName": "get_selected_elements",
       "description": "get selected elements",
+      "assemblyPath": "RevitMCPCommandSet.dll"
+    },
+    {
+      "commandName": "list_open_documents",
+      "description": "list open Revit documents",
       "assemblyPath": "RevitMCPCommandSet.dll"
     },
     {

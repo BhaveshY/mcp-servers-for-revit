@@ -3,6 +3,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+const DISABLED_TOOL_FILES = new Set(["say_hello.ts", "say_hello.js"]);
+
 export async function registerTools(server: McpServer) {
   // 获取当前文件的目录路径
   const __filename = fileURLToPath(import.meta.url);
@@ -18,7 +20,8 @@ export async function registerTools(server: McpServer) {
       file !== "index.ts" &&
       file !== "index.js" &&
       file !== "register.ts" &&
-      file !== "register.js"
+      file !== "register.js" &&
+      !DISABLED_TOOL_FILES.has(file)
   );
 
   // 动态导入并注册每个工具

@@ -37,19 +37,23 @@ namespace RevitMCPCommandSet.Commands.ExecuteDynamicCode
                 // 设置执行参数
                 _handler.SetExecutionParameters(code, executionParameters, transactionMode);
 
+                const int timeoutMs = 60000;
+
                 // 触发外部事件并等待完成
-                if (RaiseAndWaitForCompletion(60000)) // 1分钟超时
+                if (RaiseAndWaitForCompletion(timeoutMs))
                 {
                     return _handler.ResultInfo;
                 }
                 else
                 {
-                    throw new TimeoutException("代码执行超时");
+                    throw new TimeoutException(
+                        $"send_code_to_revit_timeout: code execution exceeded {timeoutMs}ms. " +
+                        "Suggestion: split writes into batches of about 20 elements or simplify the query.");
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception($"执行代码失败: {ex.Message}", ex);
+                throw new Exception($"send_code_to_revit_failed: {ex.Message}", ex);
             }
         }
     }
