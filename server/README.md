@@ -7,6 +7,12 @@ This package is the MCP server component of [mcp-servers-for-revit](https://gith
 > [!NOTE]
 > This server requires the mcp-servers-for-revit Revit plugin to be installed and running inside Revit. See the [full project README](https://github.com/BhaveshY/mcp-servers-for-revit) for setup instructions.
 
+## MCP 2026-07-28 RC readiness note
+
+The MCP server uses `StdioServerTransport` from `@modelcontextprotocol/sdk`. Per the official [MCP 2026-07-28 release-candidate notes](https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/), the new `Mcp-Method`/`Mcp-Name` HTTP header requirements apply to Streamable HTTP transports and do not affect this stdio-only server. The removal of `Mcp-Session-Id` and protocol-managed sessions also does not map to the local Revit TCP bridge; that socket/connection state is application implementation state for communicating with Revit, not MCP protocol session state.
+
+This package updates the MCP TypeScript SDK dependency for RC readiness, but does not claim full protocol-version support beyond the stdio server behavior described above.
+
 ## Setup
 
 **Claude Code**
